@@ -142,6 +142,16 @@ body.auth main{padding-bottom:20px}
   #prog{left:0;right:0}
 }
 [hidden]{display:none!important}
+.fbot{display:flex;justify-content:flex-end;margin-top:4px}
+.fbot button{width:44px;height:44px;color:var(--mut);display:flex;align-items:center;justify-content:center}
+.fbot svg{width:26px;height:26px}
+#qpanel{position:fixed;inset:0;z-index:15;display:none;flex-direction:column;background:var(--bg);padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 16px)}
+#qpanel.on{display:flex}
+.qtop{display:flex;align-items:center;gap:8px;font-weight:700}
+.qtop button{width:40px;height:40px;margin-left:-8px}
+#qlist{overflow:auto;flex:1;margin-top:6px}
+#qlist h3{font-size:1.05rem;margin:16px 0 6px}
+.qnote{color:var(--mut);font-size:.85rem;padding:8px 0}
 .shufall{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:12px 16px;border-radius:99px;background:var(--ac);color:#000;font-weight:800;margin-bottom:16px;text-align:left}
 .shufall svg{width:28px;height:28px;flex:none}
 .shufall b{display:block}.shufall span{display:block;font-weight:500;font-size:.8rem;opacity:.75}
@@ -241,10 +251,16 @@ body.auth main{padding-bottom:20px}
   <input id="fseek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Posició">
   <div class="times"><span id="tcur">0:00</span><span id="tdur">0:00</span></div>
   <div class="ctl"><button id="fprev" aria-label="Anterior"></button><button id="fpp" aria-label="Reprodueix o pausa"></button><button id="fnext" aria-label="Següent"></button></div>
+  <div class="fbot"><button id="fqueue" aria-label="Cua de reproducció"></button></div>
 </div>
 
 <div id="sheet"><div id="sheetc"></div></div>
 <div id="toast" role="status"></div>
+
+<div id="qpanel" role="dialog" aria-label="Cua de reproducció">
+  <div class="qtop"><button id="qclose" aria-label="Tanca"></button><span>Cua de reproducció</span></div>
+  <div id="qlist"></div>
+</div>
 
 <audio id="audio" preload="auto" playsinline></audio>
 
@@ -271,7 +287,10 @@ Object.assign(IC,{
   plus:sv('<path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>')
 });
 $('#fclose').innerHTML=IC.down;$('#dplay').innerHTML=IC.play;
-IC.shuffle=sv('<path d="M3 7h3.5c2 0 3.4 1 4.5 2.8l2 3.4c1.1 1.8 2.500 2.800 4.500 2.800H20M3 17h3.500c1.300 0 2.400-.4 3.300-1.200M13.500 7.500c.9-.3 1.800-.5 3-.5H20M17.500 4.500L20 7l-2.500 2.500M17.500 14.500L20 17l-2.500 2.500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>');$('#shufall').insertAdjacentHTML('afterbegin',IC.shuffle);$('#dshuf').innerHTML=IC.shuffle;$('#newpl').innerHTML=IC.plus;$('#dmore').innerHTML=IC.more;$('#fmore').innerHTML=IC.more;$('#fheart').innerHTML=IC.heart;
+IC.shuffle=sv('<path d="M3 7h3.5c2 0 3.4 1 4.5 2.8l2 3.4c1.1 1.8 2.500 2.800 4.500 2.800H20M3 17h3.500c1.300 0 2.400-.4 3.300-1.200M13.500 7.500c.9-.3 1.800-.5 3-.5H20M17.500 4.500L20 7l-2.500 2.500M17.500 14.500L20 17l-2.500 2.500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>');$('#shufall').insertAdjacentHTML('afterbegin',IC.shuffle);$('#dshuf').innerHTML=IC.shuffle;IC.close=sv('<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>');
+IC.queue=sv('<path d="M4 6h16M4 11h16M4 16h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M15 14.5v6l5-3z"/>');
+$('#fqueue').innerHTML=IC.queue;$('#qclose').innerHTML=IC.down;
+$('#newpl').innerHTML=IC.plus;$('#dmore').innerHTML=IC.more;$('#fmore').innerHTML=IC.more;$('#fheart').innerHTML=IC.heart;
 const setPP=p=>{$('#pp').innerHTML=$('#fpp').innerHTML=p?IC.pause:IC.play};setPP(false);
 
 let S=null,queue=[],idx=-1,prevView='home',libTab='albums',scrobbled=false,likes=new Set(),curDet=null,rnd=false,loadingMore=false;
@@ -482,6 +501,8 @@ function trackMenu(t,ctx){
   openSheet(s=>{
     shead(s,t.title,t.artist,cover(t,120));
     act(s,likes.has(t.id)?'Treu de M\u2019agrada':'Afegeix a M\u2019agrada',()=>{closeSheet();return toggleLike(t)});
+    act(s,'Reprodueix a continuació',()=>{closeSheet();if(idx<0)startQueue([t],0);else{queue.splice(idx+1,0,t);toast('Sonarà a continuació')}});
+    act(s,'Afegeix a la cua',()=>{closeSheet();if(idx<0)startQueue([t],0);else{queue.push(t);toast('Afegit a la cua')}});
     act(s,'Afegeix a una playlist',()=>pickPlaylist([t.id]));
     if(ctx)act(s,'Treu d\u2019aquesta playlist',async()=>{
       await api('updatePlaylist',{playlistId:ctx.plId,songIndexToRemove:ctx.index});
@@ -551,6 +572,33 @@ async function artistPlay(meta,sh){
   }catch(e){msg(e.message)}
 }
 
+/* ---------- cua de reproducció ---------- */
+function qrow(i,cur){
+  const t=queue[i],d=document.createElement('div');d.className='tr'+(cur?' cur':'');
+  d.innerHTML='<button class="main"><img alt=""><div><b></b><span></span></div></button>'+(cur?'':'<button class="more" aria-label="Treu de la cua"></button>');
+  d.querySelector('img').src=cover(t,120);
+  d.querySelector('b').textContent=t.title;d.querySelector('span').textContent=t.artist||'';
+  if(!cur){
+    d.children[0].onclick=()=>play(i);
+    d.children[1].innerHTML=IC.close;
+    d.children[1].onclick=()=>{queue.splice(i,1);renderQueue()};
+  }
+  return d;
+}
+function renderQueue(){
+  const l=$('#qlist');l.textContent='';
+  if(idx<0||!queue[idx]){l.innerHTML='<div class="qnote">No hi ha res en reproducció.</div>';return}
+  const h=t=>{const e=document.createElement('h3');e.textContent=t;return e};
+  l.append(h('Ara sona'),qrow(idx,true),h('A continuació'));
+  const rest=queue.length-idx-1;
+  if(!rest){const n=document.createElement('div');n.className='qnote';n.textContent='No queda cap cançó a la cua.';l.append(n)}
+  for(let i=idx+1;i<Math.min(queue.length,idx+101);i++)l.append(qrow(i,false));
+  if(rest>100){const n=document.createElement('div');n.className='qnote';n.textContent='I '+(rest-100)+' cançons més.';l.append(n)}
+  if(rnd){const n=document.createElement('div');n.className='qnote';n.textContent='Mode aleatori: se n\u2019afegiran més automàticament.';l.append(n)}
+}
+$('#fqueue').onclick=()=>{renderQueue();$('#qpanel').classList.add('on')};
+$('#qclose').onclick=()=>$('#qpanel').classList.remove('on');
+
 /* ---------- cerca ---------- */
 let st;
 $('#q').oninput=()=>{clearTimeout(st);st=setTimeout(doSearch,300)};
@@ -587,7 +635,7 @@ function play(i){
   $('#ncov').src=$('#fcov').src=c;
   $('#ntit').textContent=$('#ftit').textContent=t.title;
   $('#nart').textContent=$('#fart').textContent=t.artist||'';
-  tint(c);mark();syncHeart();
+  tint(c);mark();syncHeart();if($('#qpanel').classList.contains('on'))renderQueue();
   api('scrobble',{id:t.id,submission:'false'}).catch(()=>{});
   if('mediaSession' in navigator)navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist||'',album:t.album||'',artwork:[{src:c,sizes:'600x600'}]});
 }
@@ -614,15 +662,20 @@ $('#bnext').onclick=e=>{e.stopPropagation();next()};$('#bprev').onclick=e=>{e.st
 $('#fnext').onclick=next;$('#fprev').onclick=prev;
 $('#bar').onclick=()=>$('#full').classList.add('on');
 $('#fclose').onclick=()=>$('#full').classList.remove('on');
-if('mediaSession' in navigator){
-  const m=navigator.mediaSession;
-  m.setActionHandler('play',()=>audio.play());
-  m.setActionHandler('pause',()=>audio.pause());
-  m.setActionHandler('nexttrack',next);
-  m.setActionHandler('previoustrack',prev);
-  try{m.setActionHandler('seekto',e=>{audio.currentTime=e.seekTime})}catch(e){}
+function bindMS(){
+  if(!('mediaSession' in navigator))return;
+  const m=navigator.mediaSession,set=(a,f)=>{try{m.setActionHandler(a,f)}catch(e){}};
+  set('play',()=>audio.play());
+  set('pause',()=>audio.pause());
+  set('nexttrack',next);
+  set('previoustrack',prev);
+  set('seekbackward',null);   /* sense això iOS mostra els botons de \u00b110 s */
+  set('seekforward',null);
+  set('seekto',e=>{audio.currentTime=e.seekTime});
 }
-
+audio.addEventListener('playing',()=>{bindMS();if('mediaSession' in navigator)navigator.mediaSession.playbackState='playing'});
+audio.addEventListener('pause',()=>{if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused'});
+bindMS();
 $('#fheart').onclick=()=>{if(queue[idx])toggleLike(queue[idx])};
 $('#fmore').onclick=()=>{if(queue[idx])trackMenu(queue[idx])};
 $('#newpl').onclick=newPlaylist;
