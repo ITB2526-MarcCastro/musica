@@ -103,7 +103,10 @@ body.auth main{padding-bottom:20px}
 .dhead p{margin:3px 0 0;color:var(--mut);font-size:.9rem}
 #dplay{width:56px;height:56px;border-radius:50%;background:var(--ac);color:#000;display:flex;align-items:center;justify-content:center;flex:none}
 #dplay svg{width:30px;height:30px}
-.tr{display:flex;width:100%;gap:12px;padding:8px 0;text-align:left;align-items:center}
+.tr{display:flex;align-items:center;gap:4px}
+.tr .main{display:flex;flex:1;min-width:0;gap:12px;padding:8px 0;text-align:left;align-items:center}
+.more{width:40px;height:40px;color:var(--mut);display:flex;align-items:center;justify-content:center;flex:none}
+.more svg{width:22px;height:22px}
 .tr i{font-style:normal;color:var(--mut);width:1.5em;text-align:center;flex:none}
 .tr img{width:48px;height:48px;border-radius:4px;object-fit:cover;flex:none;background:var(--card)}
 .tr div{flex:1;min-width:0}
@@ -138,6 +141,29 @@ body.auth main{padding-bottom:20px}
   #bprev,#bnext{display:flex!important}
   #prog{left:0;right:0}
 }
+[hidden]{display:none!important}
+.shufall{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:12px 16px;border-radius:99px;background:var(--ac);color:#000;font-weight:800;margin-bottom:16px;text-align:left}
+.shufall svg{width:28px;height:28px;flex:none}
+.shufall b{display:block}.shufall span{display:block;font-weight:500;font-size:.8rem;opacity:.75}
+#dshuf{color:var(--tx)}#dshuf svg{width:26px;height:26px}
+.between{justify-content:space-between}
+#newpl{color:var(--tx)}#newpl svg{width:28px;height:28px}
+.dbtns{display:flex;align-items:center;gap:6px;flex:none}
+.fmeta{display:flex;align-items:center;gap:2px}
+.fmeta>div{flex:1;min-width:0}
+#fheart svg{width:28px;height:28px}
+#sheet{position:fixed;inset:0;z-index:20;display:none;background:#0009;align-items:flex-end}
+#sheet.on{display:flex}
+#sheetc{width:100%;max-height:80vh;overflow:auto;background:#282828;border-radius:14px 14px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px)}
+.sh{display:flex;gap:12px;align-items:center;padding-bottom:12px;margin-bottom:6px;border-bottom:1px solid #ffffff22}
+.sh img{width:48px;height:48px;border-radius:4px;object-fit:cover}
+.sh div{min-width:0}.sh b,.sh span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh span{color:var(--mut);font-size:.85rem}
+.act{display:block;width:100%;text-align:left;padding:14px 4px;font-size:1rem}
+.act.dng{color:#ff9b8a}
+#nm{width:100%;padding:13px 14px;border-radius:6px;border:1px solid #727272;background:var(--bg);color:var(--tx);font:inherit;margin:10px 0 4px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 76px);background:#fff;color:#000;padding:10px 16px;border-radius:99px;font-weight:600;font-size:.9rem;z-index:30;display:none;max-width:90vw;text-align:center}
+@media(min-width:800px){#sheet{align-items:center;justify-content:center}#sheetc{max-width:420px;border-radius:14px}#toast{bottom:92px}}
 @media(prefers-reduced-motion:no-preference){.view.on{animation:in .15s ease-out}@keyframes in{from{opacity:0}to{opacity:1}}}
 </style>
 </head>
@@ -164,8 +190,9 @@ body.auth main{padding-bottom:20px}
 
   <section id="home" class="view">
     <div class="top"><button id="avatar" aria-label="Compte: toca per sortir"></button><h1>LinLin</h1></div>
+    <button class="shufall" id="shufall"><div><b>Aleatori</b><span>Tota la biblioteca</span></div></button>
     <div class="recents" id="h-rec"></div>
-    <div id="h-plw" hidden><h3>Les teves llistes</h3><div class="hs" id="h-pl"></div></div>
+    <div id="h-plw"><h3>Les teves llistes</h3><div class="hs" id="h-pl"></div></div>
   </section>
 
   <section id="search" class="view">
@@ -179,7 +206,7 @@ body.auth main{padding-bottom:20px}
   </section>
 
   <section id="lib" class="view">
-    <h1>La teva biblioteca</h1>
+    <div class="top between"><h1>La teva biblioteca</h1><button class="more" id="newpl" aria-label="Crea una playlist"></button></div>
     <div class="chips">
       <button data-t="albums" class="on">Àlbums</button>
       <button data-t="artists">Artistes</button>
@@ -192,7 +219,7 @@ body.auth main{padding-bottom:20px}
   <section id="detail" class="view">
     <button class="back" id="back" aria-label="Enrere"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <img id="dcov" alt="">
-    <div class="dhead"><div><h2 id="dtit"></h2><p id="dsub"></p></div><button id="dplay" aria-label="Reprodueix"></button></div>
+    <div class="dhead"><div><h2 id="dtit"></h2><p id="dsub"></p></div><div class="dbtns"><button class="more" id="dshuf" aria-label="Reprodueix en aleatori" hidden></button><button class="more" id="dmore" aria-label="Més opcions" hidden></button><button id="dplay" aria-label="Reprodueix"></button></div></div>
     <div id="dtracks"></div>
     <div class="grid" id="dgrid"></div>
   </section>
@@ -210,11 +237,14 @@ body.auth main{padding-bottom:20px}
 <div id="full" role="dialog" aria-label="Ara sona">
   <div class="ftop"><button id="fclose" aria-label="Tanca"></button><span>Ara sona</span></div>
   <img id="fcov" alt="">
-  <div><div id="ftit"></div><div id="fart"></div></div>
+  <div class="fmeta"><div><div id="ftit"></div><div id="fart"></div></div><button class="more" id="fmore" aria-label="Més opcions"></button><button class="more" id="fheart" aria-label="M'agrada"></button></div>
   <input id="fseek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Posició">
   <div class="times"><span id="tcur">0:00</span><span id="tdur">0:00</span></div>
   <div class="ctl"><button id="fprev" aria-label="Anterior"></button><button id="fpp" aria-label="Reprodueix o pausa"></button><button id="fnext" aria-label="Següent"></button></div>
 </div>
+
+<div id="sheet"><div id="sheetc"></div></div>
+<div id="toast" role="status"></div>
 
 <audio id="audio" preload="auto" playsinline></audio>
 
@@ -234,13 +264,24 @@ const IC={
 };
 $('#bprev').innerHTML=$('#fprev').innerHTML=IC.prev;
 $('#bnext').innerHTML=$('#fnext').innerHTML=IC.next;
+Object.assign(IC,{
+  more:sv('<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>'),
+  heart:sv('<path d="M12 20.5s-8-5.2-8-11A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8 2.9c0 5.8-8 11-8 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'),
+  heartOn:sv('<path d="M12 20.5s-8-5.2-8-11A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8 2.9c0 5.8-8 11-8 11z"/>'),
+  plus:sv('<path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>')
+});
 $('#fclose').innerHTML=IC.down;$('#dplay').innerHTML=IC.play;
+IC.shuffle=sv('<path d="M3 7h3.5c2 0 3.4 1 4.5 2.8l2 3.4c1.1 1.8 2.500 2.800 4.500 2.800H20M3 17h3.500c1.300 0 2.400-.4 3.300-1.200M13.500 7.500c.9-.3 1.800-.5 3-.5H20M17.500 4.500L20 7l-2.500 2.500M17.500 14.500L20 17l-2.500 2.500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>');$('#shufall').insertAdjacentHTML('afterbegin',IC.shuffle);$('#dshuf').innerHTML=IC.shuffle;$('#newpl').innerHTML=IC.plus;$('#dmore').innerHTML=IC.more;$('#fmore').innerHTML=IC.more;$('#fheart').innerHTML=IC.heart;
 const setPP=p=>{$('#pp').innerHTML=$('#fpp').innerHTML=p?IC.pause:IC.play};setPP(false);
 
-let S=null,queue=[],idx=-1,prevView='home',libTab='albums',scrobbled=false;
+let S=null,queue=[],idx=-1,prevView='home',libTab='albums',scrobbled=false,likes=new Set(),curDet=null,rnd=false,loadingMore=false;
 try{S=JSON.parse(localStorage.getItem('session')||'null')}catch(e){}
 
-const qs=(x={})=>new URLSearchParams({u:S.user,t:S.token,s:S.salt,v:'1.16.1',c:'linlin',...x});
+const qs=(x={})=>{
+  const p=new URLSearchParams({u:S.user,t:S.token,s:S.salt,v:'1.16.1',c:'linlin'});
+  for(const [k,v] of Object.entries(x))Array.isArray(v)?v.forEach(i=>p.append(k,i)):p.set(k,v);
+  return p;
+};
 const url=(ep,p)=>`${SERVER}/rest/${ep}?${qs(p)}`;
 const cover=(o,s=300)=>url('getCoverArt',{id:o.coverArt||o.albumId||o.id,size:s});
 const fmt=s=>s?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
@@ -275,14 +316,14 @@ async function login(){
   }
 }
 function logout(){
-  localStorage.removeItem('session');S=null;
-  audio.pause();audio.removeAttribute('src');queue=[];idx=-1;
+  localStorage.removeItem('session');S=null;likes=new Set();
+  audio.pause();audio.removeAttribute('src');queue=[];idx=-1;rnd=false;
   $('#bar').classList.remove('on');$('#full').classList.remove('on');
   document.body.classList.add('auth');go('login',false);
 }
 function enter(){
   document.body.classList.remove('auth');
-  $('#avatar').textContent=S.user.charAt(0);
+  $('#avatar').textContent=S.user.charAt(0);loadLikes();
   go('home');loadHome();
 }
 $('#avatar').onclick=()=>{if(confirm('Vols tancar la sessió?'))logout()};
@@ -306,35 +347,44 @@ $$('.chips button').forEach(b=>b.onclick=()=>{
 function card(o,title,sub,fn,round){
   const b=document.createElement('button');b.className='card'+(round?' round':'');
   b.innerHTML='<img loading="lazy" alt=""><b></b><span></span>';
-  b.children[0].src=cover(o);b.children[1].textContent=title;b.children[2].textContent=sub||'';
+  b.children[0].src=o.img||cover(o);b.children[1].textContent=title;b.children[2].textContent=sub||'';
   b.onclick=fn;return b;
 }
 function row(o,title,sub,fn,round){
   const b=document.createElement('button');b.className='row'+(round?' round':'');
   b.innerHTML='<img loading="lazy" alt=""><div><b></b><span></span></div>';
-  b.children[0].src=cover(o,120);b.querySelector('b').textContent=title;b.querySelector('span').textContent=sub;
+  b.children[0].src=o.img||cover(o,120);b.querySelector('b').textContent=title;b.querySelector('span').textContent=sub;
   b.onclick=fn;return b;
 }
 const albumCards=(el,l)=>{el.textContent='';l.forEach(a=>el.append(card(a,a.name||a.title,a.artist,()=>openAlbum(a.id))))};
 const artistCards=(el,l)=>{el.textContent='';l.forEach(a=>el.append(card(a,a.name,'Artista',()=>openArtist(a.id),true)))};
 
-function tracks(el,songs,art){
+function tracks(el,songs,art,ctx){
   el.textContent='';
   songs.forEach((t,i)=>{
-    const b=document.createElement('button');b.className='tr';b.dataset.id=t.id;
-    b.innerHTML=(art?'<img loading="lazy" alt="">':'<i></i>')+'<div><b></b><span></span></div><small></small>';
-    if(art)b.children[0].src=cover(t,120);else b.children[0].textContent=i+1;
-    b.querySelector('b').textContent=t.title;
-    b.querySelector('span').textContent=t.artist||'';
-    b.querySelector('small').textContent=t.duration?fmt(t.duration):'';
-    b.onclick=()=>{queue=songs.slice();play(i)};
-    el.append(b);
+    const r=document.createElement('div');r.className='tr';r.dataset.id=t.id;
+    r.innerHTML='<button class="main">'+(art?'<img loading="lazy" alt="">':'<i></i>')+'<div><b></b><span></span></div></button><button class="more" aria-label="Més opcions"></button>';
+    const m=r.children[0],o=r.children[1];
+    if(art)m.children[0].src=cover(t,120);else m.children[0].textContent=i+1;
+    m.querySelector('b').textContent=t.title;
+    m.querySelector('span').textContent=t.artist||'';
+    o.innerHTML=IC.more;
+    m.onclick=()=>startQueue(songs,i);
+    o.onclick=()=>trackMenu(t,ctx?{plId:ctx.plId,index:i}:null);
+    el.append(r);
   });
   mark();
 }
 const mark=()=>$$('.tr').forEach(r=>r.classList.toggle('cur',!!queue[idx]&&r.dataset.id===queue[idx].id));
 
 /* ---------- pantalles ---------- */
+const LIKED_IMG='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b3bd6"/><stop offset="1" stop-color="#9ec9c0"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/><path d="M50 73S27 58 27 43c0-8 6-14 13-14 4 0 8 2 10 6 2-4 6-6 10-6 7 0 13 6 13 14 0 15-23 30-23 30z" fill="#fff"/></svg>');
+const syncChips=()=>$$('.chips button').forEach(x=>x.classList.toggle('on',x.dataset.t===libTab));
+
+async function loadLikes(){
+  try{const r=(await api('getStarred2')).starred2||{};likes=new Set((r.song||[]).map(x=>x.id));syncHeart()}catch(e){}
+}
+
 async function loadHome(){
   try{
     let l=(await api('getAlbumList2',{type:'recent',size:6})).albumList2.album||[];
@@ -346,8 +396,8 @@ async function loadHome(){
       b.onclick=()=>openAlbum(a.id);g.append(b);
     });
     const pl=(await api('getPlaylists')).playlists.playlist||[];
-    $('#h-plw').hidden=!pl.length;
     const h=$('#h-pl');h.textContent='';
+    h.append(card({img:LIKED_IMG},"M'agrada",'Playlist',openStarred));
     pl.forEach(p=>h.append(card(p,p.name,(p.songCount||0)+' cançons',()=>openPlaylist(p.id))));
   }catch(e){msg('No s\u2019ha pogut carregar l\u2019inici: '+e.message)}
 }
@@ -365,23 +415,141 @@ async function loadLib(){
       if(!l.length){n.hidden=false;n.textContent='Encara no hi ha cap artista.'}
     }else{
       const l=(await api('getPlaylists')).playlists.playlist||[];
+      g.append(row({img:LIKED_IMG},"M'agrada",'Playlist \u00b7 '+likes.size+' cançons',openStarred));
       l.forEach(p=>g.append(row(p,p.name,'Playlist \u00b7 '+(p.songCount||0)+' cançons',()=>openPlaylist(p.id))));
-      if(!l.length){n.hidden=false;n.textContent='Encara no tens cap playlist.'}
     }
   }catch(e){msg('No s\u2019ha pogut carregar la biblioteca: '+e.message)}
 }
 
-function detail(h,songs,albums){
+function detail(h,songs,albums,meta){
+  curDet=meta?{...meta,songs:songs||[]}:null;
   $('#dcov').src=h.img;$('#dtit').textContent=h.title;$('#dsub').textContent=h.sub||'';
   const t=$('#dtracks'),g=$('#dgrid');t.textContent='';g.textContent='';
-  const p=$('#dplay');p.hidden=!(songs&&songs.length);
-  if(songs){tracks(t,songs);p.onclick=()=>{queue=songs.slice();play(0)}}
+  $('#dmore').hidden=!(meta&&(meta.type==='album'||meta.type==='playlist'));
+  const p=$('#dplay'),sh=$('#dshuf'),isA=!!meta&&meta.type==='artist';p.hidden=sh.hidden=!(isA||(songs&&songs.length));
+  if(songs){tracks(t,songs,false,meta&&meta.type==='playlist'?{plId:meta.id}:null);p.onclick=()=>startQueue(songs,0);sh.onclick=()=>startQueue(shuffle(songs),0)}
+  if(isA){p.onclick=()=>artistPlay(meta,false);sh.onclick=()=>artistPlay(meta,true)}
   if(albums)albumCards(g,albums);
   go('detail',false);
 }
-async function openAlbum(id){try{const a=(await api('getAlbum',{id})).album;detail({img:cover(a,500),title:a.name,sub:a.artist},a.song||[])}catch(e){msg(e.message)}}
-async function openArtist(id){try{const a=(await api('getArtist',{id})).artist;detail({img:cover(a,500),title:a.name,sub:'Artista'},null,a.album||[])}catch(e){msg(e.message)}}
-async function openPlaylist(id){try{const p=(await api('getPlaylist',{id})).playlist;detail({img:cover(p,500),title:p.name,sub:'Playlist \u00b7 '+(p.songCount||0)+' cançons'},p.entry||[])}catch(e){msg(e.message)}}
+async function openAlbum(id){try{const a=(await api('getAlbum',{id})).album;detail({img:cover(a,500),title:a.name,sub:a.artist},a.song||[],null,{type:'album',id,name:a.name})}catch(e){msg(e.message)}}
+async function openArtist(id){try{const a=(await api('getArtist',{id})).artist;detail({img:cover(a,500),title:a.name,sub:'Artista \u00b7 '+(a.album||[]).length+' àlbums'},null,a.album||[],{type:'artist',id,name:a.name,albums:a.album||[]})}catch(e){msg(e.message)}}
+async function openPlaylist(id){try{const p=(await api('getPlaylist',{id})).playlist;detail({img:cover(p,500),title:p.name,sub:'Playlist \u00b7 '+(p.songCount||0)+' cançons'},p.entry||[],null,{type:'playlist',id,name:p.name})}catch(e){msg(e.message)}}
+async function openStarred(){
+  try{
+    const s=((await api('getStarred2')).starred2||{}).song||[];
+    likes=new Set(s.map(x=>x.id));
+    detail({img:LIKED_IMG,title:"M'agrada",sub:'Playlist \u00b7 '+s.length+' cançons'},s,null,{type:'starred'});
+  }catch(e){msg(e.message)}
+}
+
+/* ---------- full d'opcions, M'agrada i playlists ---------- */
+let tt;
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>{e.style.display='none'},2200)}
+const closeSheet=()=>$('#sheet').classList.remove('on');
+function openSheet(build){const s=$('#sheetc');s.textContent='';build(s);$('#sheet').classList.add('on')}
+function shead(s,title,sub,img){
+  const d=document.createElement('div');d.className='sh';
+  d.innerHTML=(img?'<img alt="">':'')+'<div><b></b><span></span></div>';
+  if(img)d.children[0].src=img;
+  d.querySelector('b').textContent=title;d.querySelector('span').textContent=sub||'';s.append(d);
+}
+function act(s,label,fn,danger){
+  const b=document.createElement('button');b.className='act'+(danger?' dng':'');b.textContent=label;
+  b.onclick=()=>{Promise.resolve(fn()).catch(e=>{closeSheet();msg(e.message)})};s.append(b);
+}
+function askName(title,val,cb){
+  openSheet(s=>{
+    const h=document.createElement('b');h.textContent=title;s.append(h);
+    const i=document.createElement('input');i.id='nm';i.value=val;i.placeholder='Nom de la playlist';i.maxLength=80;s.append(i);
+    const ok=async()=>{const n=i.value.trim();if(!n)return;closeSheet();try{await cb(n)}catch(e){msg(e.message)}};
+    i.onkeydown=e=>{if(e.key==='Enter')ok()};
+    const b=document.createElement('button');b.className='btn';b.textContent='Desa';b.onclick=ok;s.append(b);
+    setTimeout(()=>i.focus(),60);
+  });
+}
+function syncHeart(){
+  const t=queue[idx],on=!!t&&likes.has(t.id),b=$('#fheart');
+  b.innerHTML=on?IC.heartOn:IC.heart;b.style.color=on?'var(--ac)':'';b.setAttribute('aria-pressed',on);
+}
+async function toggleLike(t){
+  const on=!likes.has(t.id);
+  on?likes.add(t.id):likes.delete(t.id);syncHeart();
+  try{await api(on?'star':'unstar',{id:t.id});toast(on?'Afegit a M\u2019agrada':'Tret de M\u2019agrada')}
+  catch(e){on?likes.delete(t.id):likes.add(t.id);syncHeart();msg(e.message)}
+}
+function trackMenu(t,ctx){
+  openSheet(s=>{
+    shead(s,t.title,t.artist,cover(t,120));
+    act(s,likes.has(t.id)?'Treu de M\u2019agrada':'Afegeix a M\u2019agrada',()=>{closeSheet();return toggleLike(t)});
+    act(s,'Afegeix a una playlist',()=>pickPlaylist([t.id]));
+    if(ctx)act(s,'Treu d\u2019aquesta playlist',async()=>{
+      await api('updatePlaylist',{playlistId:ctx.plId,songIndexToRemove:ctx.index});
+      closeSheet();toast('Cançó treta');openPlaylist(ctx.plId);
+    });
+  });
+}
+async function pickPlaylist(ids){
+  const pls=(await api('getPlaylists')).playlists.playlist||[];
+  openSheet(s=>{
+    shead(s,'Afegeix a una playlist','');
+    act(s,'+ Nova playlist',()=>askName('Nova playlist','',async n=>{
+      await api('createPlaylist',{name:n,songId:ids});toast('Playlist creada: '+n);
+    }));
+    pls.forEach(p=>act(s,p.name,async()=>{
+      await api('updatePlaylist',{playlistId:p.id,songIdToAdd:ids});closeSheet();toast('Afegit a '+p.name);
+    }));
+  });
+}
+function newPlaylist(){
+  askName('Nova playlist','',async n=>{
+    await api('createPlaylist',{name:n});toast('Playlist creada: '+n);
+    libTab='playlists';syncChips();loadLib();
+  });
+}
+async function delPl(d){
+  closeSheet();
+  if(!confirm('Vols esborrar la playlist «'+d.name+'»? Les cançons no s\u2019esborren.'))return;
+  await api('deletePlaylist',{id:d.id});toast('Playlist esborrada');
+  libTab='playlists';syncChips();go('lib');loadLib();
+}
+function dMenu(){
+  const d=curDet;if(!d)return;
+  openSheet(s=>{
+    shead(s,d.name,d.type==='playlist'?'Playlist':'Àlbum',$('#dcov').src);
+    act(s,'Afegeix a una playlist',()=>pickPlaylist(d.songs.map(x=>x.id)));
+    if(d.type==='playlist'){
+      act(s,'Canvia el nom',()=>askName('Canvia el nom',d.name,async n=>{
+        await api('updatePlaylist',{playlistId:d.id,name:n});d.name=n;$('#dtit').textContent=n;toast('Nom actualitzat');
+      }));
+      act(s,'Esborra la playlist',()=>delPl(d),true);
+    }
+  });
+}
+
+/* ---------- aleatori i artistes sencers ---------- */
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function startQueue(l,i=0,r=false){rnd=r;queue=l.slice();play(i)}
+async function playAllRandom(){
+  try{
+    const l=(await api('getRandomSongs',{size:500})).randomSongs?.song||[];
+    if(!l.length){msg('No hi ha cançons a la biblioteca.');return}
+    startQueue(l,0,true);toast('Tota la biblioteca en aleatori');
+  }catch(e){msg(e.message)}
+}
+async function moreRandom(){
+  if(loadingMore)return;loadingMore=true;
+  try{const l=(await api('getRandomSongs',{size:100})).randomSongs?.song||[];queue=queue.concat(l)}catch(e){}
+  loadingMore=false;
+}
+async function artistPlay(meta,sh){
+  try{
+    toast('Carregant les cançons\u2026');
+    if(!meta.songs)meta.songs=(await Promise.all(meta.albums.map(a=>api('getAlbum',{id:a.id}).then(r=>r.album.song||[])))).flat();
+    if(!meta.songs.length){msg('Aquest artista no té cançons.');return}
+    startQueue(sh?shuffle(meta.songs):meta.songs,0);
+  }catch(e){msg(e.message)}
+}
 
 /* ---------- cerca ---------- */
 let st;
@@ -419,11 +587,11 @@ function play(i){
   $('#ncov').src=$('#fcov').src=c;
   $('#ntit').textContent=$('#ftit').textContent=t.title;
   $('#nart').textContent=$('#fart').textContent=t.artist||'';
-  tint(c);mark();
+  tint(c);mark();syncHeart();
   api('scrobble',{id:t.id,submission:'false'}).catch(()=>{});
   if('mediaSession' in navigator)navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist||'',album:t.album||'',artwork:[{src:c,sizes:'600x600'}]});
 }
-const next=()=>{if(idx+1<queue.length)play(idx+1)};
+const next=()=>{if(rnd&&idx>=queue.length-3)moreRandom();if(idx+1<queue.length)play(idx+1)};
 const prev=()=>{if(audio.currentTime>3||idx===0)audio.currentTime=0;else play(idx-1)};
 audio.addEventListener('ended',next);
 audio.addEventListener('play',()=>setPP(true));
@@ -455,6 +623,12 @@ if('mediaSession' in navigator){
   try{m.setActionHandler('seekto',e=>{audio.currentTime=e.seekTime})}catch(e){}
 }
 
+$('#fheart').onclick=()=>{if(queue[idx])toggleLike(queue[idx])};
+$('#fmore').onclick=()=>{if(queue[idx])trackMenu(queue[idx])};
+$('#newpl').onclick=newPlaylist;
+$('#dmore').onclick=dMenu;
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')closeSheet()};
+$('#shufall').onclick=playAllRandom;
 $('#go').onclick=login;
 $('#pwd').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 if(S)enter();
