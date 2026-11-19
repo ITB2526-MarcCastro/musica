@@ -140,7 +140,7 @@ body.auth main{padding-bottom:20px}
 .shufall{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:12px 16px;border-radius:99px;background:var(--ac);color:#000;font-weight:800;margin-bottom:16px;text-align:left}
 .shufall svg{width:28px;height:28px;flex:none}
 .shufall b{display:block}.shufall span{display:block;font-weight:500;font-size:.8rem;opacity:.75}
-#dshuf{color:var(--tx)}#dshuf svg{width:26px;height:26px}
+#dshuf{color:var(--mut);position:relative}#dshuf svg{width:26px;height:26px}#dshuf.on{color:var(--ac)}#dshuf.on::after{content:"";position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--ac)}
 .between{justify-content:space-between}
 #newpl{color:var(--tx)}#newpl svg{width:28px;height:28px}
 .dbtns{display:flex;align-items:center;gap:6px;flex:none}
@@ -297,7 +297,7 @@ body.playing #fcov{transform:none}
   <section id="detail" class="view">
     <button class="back" id="back" aria-label="Enrere"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <img id="dcov" alt="">
-    <div class="dhead"><div><h2 id="dtit"></h2><p id="dsub"></p></div><div class="dbtns"><button class="more" id="dshuf" aria-label="Reprodueix en aleatori" hidden></button><button class="more" id="dmore" aria-label="Més opcions" hidden></button><button id="dplay" aria-label="Reprodueix"></button></div></div>
+    <div class="dhead"><div><h2 id="dtit"></h2><p id="dsub"></p></div><div class="dbtns"><button class="more" id="dshuf" aria-label="Aleatori" aria-pressed="false" hidden></button><button class="more" id="dmore" aria-label="Més opcions" hidden></button><button id="dplay" aria-label="Reprodueix"></button></div></div>
     <div id="dtracks"></div>
     <div class="grid" id="dgrid"></div>
   </section>
@@ -524,8 +524,8 @@ function detail(h,songs,albums,meta){
   const t=$('#dtracks'),g=$('#dgrid');t.textContent='';g.textContent='';
   $('#dmore').hidden=!(meta&&(meta.type==='album'||meta.type==='playlist'));
   const p=$('#dplay'),sh=$('#dshuf'),isA=!!meta&&meta.type==='artist';p.hidden=sh.hidden=!(isA||(songs&&songs.length));
-  if(songs){tracks(t,songs,false,meta&&meta.type==='playlist'?{plId:meta.id}:null);p.onclick=()=>startQueue(songs,0);sh.onclick=()=>startQueue(shuffle(songs),0,false,true)}
-  if(isA){p.onclick=()=>artistPlay(meta,false);sh.onclick=()=>artistPlay(meta,true)}
+  if(songs){tracks(t,songs,false,meta&&meta.type==='playlist'?{plId:meta.id}:null);p.onclick=()=>playList(songs)}
+  sh.onclick=toggleShuffle;if(isA)p.onclick=()=>artistPlay(meta);
   if(albums)albumCards(g,albums);
   go('detail',false);
 }
@@ -628,11 +628,17 @@ function dMenu(){
 
 /* ---------- aleatori i artistes sencers ---------- */
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-function startQueue(l,i=0,r=false,sh=false,name){
-  rnd=r;queue=l.slice();shufOn=r||sh;origUp=null;
+function startQueue(l,i=0,r=false,sh,name){
+  const on=r||(sh===undefined?shufOn:sh);
+  let q=l.slice(),start=i;origUp=null;
+  if(on&&!r&&q.length>1){            /* mode aleatori: sona la cançó triada i la resta es barreja */
+    origUp=l.slice();const cur=q.splice(i,1)[0];q=[cur].concat(shuffle(q));start=0;
+  }
+  rnd=r;queue=q;shufOn=on;
   queueName=name!==undefined?name:($('#detail').classList.contains('on')?$('#dtit').textContent:'');
-  syncShuf();play(i);
+  syncShuf();play(start);
 }
+function playList(l){if(l&&l.length)startQueue(l,shufOn?Math.floor(Math.random()*l.length):0)}
 async function playAllRandom(){
   try{
     const l=(await api('getRandomSongs',{size:500})).randomSongs?.song||[];
@@ -645,12 +651,12 @@ async function moreRandom(){
   try{const l=(await api('getRandomSongs',{size:100})).randomSongs?.song||[];queue=queue.concat(l)}catch(e){}
   loadingMore=false;
 }
-async function artistPlay(meta,sh){
+async function artistPlay(meta){
   try{
     toast('Carregant les cançons\u2026');
     if(!meta.songs)meta.songs=(await Promise.all(meta.albums.map(a=>api('getAlbum',{id:a.id}).then(r=>r.album.song||[])))).flat();
     if(!meta.songs.length){msg('Aquest artista no té cançons.');return}
-    startQueue(sh?shuffle(meta.songs):meta.songs,0,false,sh,meta.name);
+    startQueue(meta.songs,shufOn?Math.floor(Math.random()*meta.songs.length):0,false,undefined,meta.name);
   }catch(e){msg(e.message)}
 }
 
@@ -714,14 +720,19 @@ const closeQ=()=>$('#qpanel').classList.remove('on');
 $('#fqueue').onclick=openQ;
 $('#qpanel').onclick=e=>{if(e.target.id==='qpanel')closeQ()};
 
-function syncShuf(){$('#fshuf').classList.toggle('on',shufOn);$('#qshuf').classList.toggle('on',shufOn)}
+function syncShuf(){['#fshuf','#qshuf','#dshuf'].forEach(q=>{const e=$(q);e.classList.toggle('on',shufOn);e.setAttribute('aria-pressed',shufOn)})}
 function toggleShuffle(){
-  if(idx<0)return;
-  const up=queue.slice(idx+1);
+  /* és un mode: la cançó que sona no canvia mai, només l'ordre del que ve darrere */
+  if(idx<0||!queue[idx]){shufOn=!shufOn;origUp=null;syncShuf();toast(shufOn?'Aleatori activat':'Aleatori desactivat');return}
   if(!shufOn){
-    origUp=up;queue=queue.slice(0,idx+1).concat(shuffle(up));shufOn=true;toast('Aleatori activat');
+    origUp=queue.slice();
+    queue=queue.slice(0,idx+1).concat(shuffle(queue.slice(idx+1)));
+    shufOn=true;toast('Aleatori activat');
   }else{
-    if(origUp){const now=new Set(up),back=origUp.filter(t=>now.has(t)),bs=new Set(back);queue=queue.slice(0,idx+1).concat(back,up.filter(t=>!bs.has(t)))}
+    if(origUp){
+      const cur=queue[idx],k=origUp.indexOf(cur),os=new Set(origUp);
+      if(k>=0){const extra=queue.slice(idx+1).filter(t=>!os.has(t));queue=queue.slice(0,idx+1).concat(origUp.slice(k+1),extra)}
+    }
     shufOn=false;origUp=null;toast('Aleatori desactivat');
   }
   syncShuf();if($('#qpanel').classList.contains('on'))renderQueue();
